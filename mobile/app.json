@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Senior AI",
+    "slug": "senior-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "seniorai",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.borges.seniorai",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "O Senior AI usa o microfone para gravar suas reuniões com autorização dos participantes."
+      }
+    },
+    "android": {
+      "package": "com.borges.seniorai",
+      "allowBackup": false,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

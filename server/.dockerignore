@@ -1,0 +1,11 @@
+.git
+node_modules
+dist
+coverage
+tmp
+storage
+.env
+.env.*
+!.env.example
+Dockerfile
+docker-compose.yml

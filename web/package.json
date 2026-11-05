@@ -1,0 +1,45 @@
+{
+  "name": "senior-ai-web",
+  "version": "0.1.0",
+  "description": "Assistente executivo inteligente",
+  "productName": "Senior AI",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare",
+    "test": "vitest run",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "browserslist": [
+    "last 10 Chrome versions",
+    "last 10 Firefox versions",
+    "last 4 Edge versions",
+    "last 7 Safari versions",
+    "last 8 Android versions",
+    "last 8 ChromeAndroid versions",
+    "last 10 iOS versions"
+  ],
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.17",
+    "axios": "^1.21.0",
+    "core-js": "^3.51.0",
+    "quasar": "^2.35.2",
+    "vue": "^3.5.44",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@quasar/app-webpack": "^4.4.5",
+    "@types/node": "^22.20.5",
+    "autoprefixer": "^10.4.21",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.5.4",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^2.2.12"
+  }
+}

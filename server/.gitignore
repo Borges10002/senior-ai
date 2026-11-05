@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+tmp
+storage/
+.env
+.env.local
+.env.online

@@ -1,0 +1,91 @@
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: senior-ai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    # Só na máquina local (para `npm run dev` fora do Docker). Nunca exponha publicamente.
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - senior-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: senior-ai-redis
+    restart: unless-stopped
+    command: ["sh", "-c", 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "$$REDIS_PASSWORD" --no-auth-warning ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - senior-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: senior-ai-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: database
+      REDIS_HOST: redis
+    ports:
+      - "127.0.0.1:3333:3333"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - senior-network
+
+  # Ativado na Fase 3 (processamento de IA): docker compose --profile worker up -d
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: senior-ai-worker
+    profiles: ["worker"]
+    restart: on-failure
+    command: ["node", "dist/shared/infra/queue/worker.js"]
+    healthcheck:
+      disable: true
+    env_file:
+      - .env
+    environment:
+      DB_HOST: database
+      REDIS_HOST: redis
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - senior-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  senior-network:
+    driver: bridge
