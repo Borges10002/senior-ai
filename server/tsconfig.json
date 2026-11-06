@@ -5,23 +5,26 @@
     "target": "ES2022",
     "baseUrl": "./src",
     "outDir": "./dist",
+
     "paths": {
       "@config/*": ["config/*"],
       "@modules/*": ["modules/*"],
+      "@errors/*": ["errors/*"],
       "@shared/*": ["shared/*"],
       "@utils/*": ["utils/*"],
-      "@middlewares/*": ["shared/infra/http/middlewares/*"],
+      "@middleawares/*": ["shared/infra/http/middleawares/*"],
       "@/*": ["./*"]
     },
-    "strict": true,
+
+    "strict": false,
+    "noImplicitAny": false,
     "strictPropertyInitialization": false,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["node", "vitest/globals"]
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

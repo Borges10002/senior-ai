@@ -1,4 +1,171 @@
-// Estilos globais do app.
+// app global css in SCSS form
+
+// Tokens visuais — mesma paleta do app mobile (mobile/src/ui/theme.ts).
+:root {
+  --mf-bg: #f4f6fb;
+  --mf-surface: #ffffff;
+  --mf-surface-alt: #eef1f8;
+  --mf-border: #e1e6f0;
+  --mf-text: #0f1b2d;
+  --mf-text-muted: #5b6b82;
+  --mf-primary: #2457f5;
+  --mf-primary-soft: #e3eaff;
+  --mf-income: #0e9f6e;
+  --mf-income-soft: #ddf5ec;
+  --mf-expense: #e5484d;
+  --mf-expense-soft: #fde7e8;
+  --mf-warning: #d98e04;
+  --mf-warning-soft: #fff3d6;
+  --mf-radius: 18px;
+}
+
+// Tema escuro (Quasar põe .body--dark no body): mesma paleta escura do app.
+body.body--dark {
+  --mf-bg: #0b111c;
+  --mf-surface: #141c2b;
+  --mf-surface-alt: #1b2538;
+  --mf-border: #26324a;
+  --mf-text: #eef2fa;
+  --mf-text-muted: #97a3b8;
+  --mf-primary: #5b83ff;
+  --mf-primary-soft: #1c2a52;
+  --mf-income: #34c98e;
+  --mf-income-soft: #123528;
+  --mf-expense: #ff6b6f;
+  --mf-expense-soft: #3d1a1c;
+  --mf-warning: #f2b33d;
+  --mf-warning-soft: #3a2d10;
+
+  .q-card,
+  .q-menu,
+  .q-dialog__inner > div {
+    background: var(--mf-surface);
+    color: var(--mf-text);
+  }
+
+  .q-header {
+    background: rgba(11, 17, 28, 0.88) !important;
+    color: var(--mf-text) !important;
+  }
+
+  // Textos e eixos dos gráficos (ApexCharts) legíveis no escuro.
+  .apexcharts-text,
+  .apexcharts-legend-text {
+    fill: var(--mf-text-muted) !important;
+    color: var(--mf-text-muted) !important;
+  }
+
+  .apexcharts-tooltip {
+    background: var(--mf-surface-alt) !important;
+    border-color: var(--mf-border) !important;
+    color: var(--mf-text) !important;
+  }
+
+  .apexcharts-pie-area,
+  .apexcharts-pie-series path {
+    stroke: var(--mf-surface) !important;
+  }
+}
+
 body {
-  -webkit-font-smoothing: antialiased;
+  background: var(--mf-bg);
+  color: var(--mf-text);
+  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.mf-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.mf-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mf-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.mf-subtitle {
+  margin: 4px 0 0;
+  color: var(--mf-text-muted);
+}
+
+.mf-section-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.mf-card {
+  background: var(--mf-surface);
+  border: 1px solid var(--mf-border);
+  border-radius: var(--mf-radius);
+  padding: 20px;
+}
+
+.mf-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.mf-muted {
+  color: var(--mf-text-muted);
+}
+
+.mf-income {
+  color: var(--mf-income);
+}
+
+.mf-expense {
+  color: var(--mf-expense);
+}
+
+.mf-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--mf-surface-alt);
+  overflow: hidden;
+
+  > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--mf-primary);
+    transition: width 0.3s ease;
+  }
+}
+
+.mf-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--mf-text-muted);
+
+  .q-icon {
+    color: var(--mf-primary);
+    background: var(--mf-primary-soft);
+    border-radius: 20px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  strong {
+    display: block;
+    color: var(--mf-text);
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+  }
 }

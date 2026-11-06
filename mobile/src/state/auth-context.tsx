@@ -1,44 +1,110 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
-import type { Usuario } from "@/domain/models";
-import { configurarSessaoExpirada, login, logout } from "@/infra/api/http-client";
-import { carregarSessao } from "@/infra/storage/session-storage";
+import type { Sessao, Usuario } from "@/domain/models";
+import { configurarSessao } from "@/infra/api/http-client";
+import { authService } from "@/infra/api/services";
+import {
+  carregarSessao,
+  limparSessao,
+  salvarSessao,
+} from "@/infra/storage/session-storage";
 
-interface AuthValor {
+interface AuthState {
   usuario: Usuario | null;
   carregando: boolean;
-  entrar(email: string, senha: string): Promise<void>;
-  sair(): Promise<void>;
+  entrar: (email: string, senha: string) => Promise<void>;
+  cadastrar: (nome: string, email: string, senha: string) => Promise<void>;
+  sair: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthValor | null>(null);
+const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [sessao, setSessao] = useState<Sessao | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const sessaoRef = useRef<Sessao | null>(null);
+  const renovacaoRef = useRef<Promise<Sessao | null> | null>(null);
+  const persistenciaRef = useRef<Promise<void>>(Promise.resolve());
+
+  const aplicar = useCallback(async (nova: Sessao | null) => {
+    sessaoRef.current = nova;
+    setSessao(nova);
+    // Mantém a ordem: uma gravação pendente nunca pode terminar depois da limpeza do logout.
+    const persistencia = persistenciaRef.current.catch(() => undefined)
+      .then(() => nova ? salvarSessao(nova) : limparSessao());
+    persistenciaRef.current = persistencia;
+    await persistencia;
+  }, []);
 
   useEffect(() => {
-    configurarSessaoExpirada(() => setUsuario(null));
-    carregarSessao()
-      .then((s) => setUsuario(s?.usuario ?? null))
-      .finally(() => setCarregando(false));
-  }, []);
+    configurarSessao({
+      get: () => sessaoRef.current,
+      // Várias requisições podem receber 401 juntas; todas aguardam a mesma renovação.
+      refresh: () => {
+        const atual = sessaoRef.current;
+        if (!atual?.refreshToken) return Promise.resolve(null);
+        renovacaoRef.current ??= authService
+          .renovar(atual.refreshToken)
+          .then(async (nova) => {
+            // Logout ou troca de conta invalidam a renovação em andamento.
+            if (sessaoRef.current !== atual) return null;
+            await aplicar(nova);
+            return nova;
+          })
+          .catch(() => null)
+          .finally(() => {
+            renovacaoRef.current = null;
+          });
+        return renovacaoRef.current;
+      },
+      onExpired: () => {
+        void aplicar(null).catch(() => undefined);
+      },
+    });
 
-  const entrar = useCallback(async (email: string, senha: string) => {
-    setUsuario((await login(email, senha)).usuario);
-  }, []);
+    carregarSessao().then((salva) => {
+      sessaoRef.current = salva;
+      setSessao(salva);
+      setCarregando(false);
+    });
+  }, [aplicar]);
 
-  const sair = useCallback(async () => {
-    await logout();
-    setUsuario(null);
-  }, []);
+  const entrar = useCallback(
+    async (email: string, senha: string) => {
+      await aplicar(await authService.entrar(email, senha));
+    },
+    [aplicar],
+  );
 
-  const valor = useMemo(() => ({ usuario, carregando, entrar, sair }), [usuario, carregando, entrar, sair]);
+  const cadastrar = useCallback(
+    async (nome: string, email: string, senha: string) => {
+      await authService.cadastrar(nome, email, senha);
+      await entrar(email, senha);
+    },
+    [entrar],
+  );
+
+  const sair = useCallback(() => aplicar(null), [aplicar]);
+
+  const valor = useMemo(
+    () => ({ usuario: sessao?.user ?? null, carregando, entrar, cadastrar, sair }),
+    [sessao, carregando, entrar, cadastrar, sair],
+  );
+
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): AuthValor {
-  const valor = useContext(AuthContext);
-  if (!valor) throw new Error("useAuth precisa estar dentro de AuthProvider");
-  return valor;
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth deve ser usado dentro de AuthProvider");
+  return ctx;
 }

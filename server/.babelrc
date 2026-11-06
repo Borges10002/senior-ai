@@ -4,16 +4,16 @@
     "@babel/preset-typescript"
   ],
   "plugins": [
-    "babel-plugin-transform-typescript-metadata",
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
     ["@babel/plugin-proposal-class-properties", { "loose": true }],
+    "babel-plugin-transform-typescript-metadata",
     ["module-resolver", {
       "alias": {
         "@": "./src",
         "@config": "./src/config",
         "@modules": "./src/modules",
         "@shared": "./src/shared",
-        "@middlewares": "./src/shared/infra/http/middlewares",
+        "@middleawares": "./src/shared/infra/http/middleawares",
         "@utils": "./src/utils"
       }
     }]

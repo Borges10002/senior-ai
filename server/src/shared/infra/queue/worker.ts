@@ -7,7 +7,7 @@ import "@/config/env";
 import "@shared/container";
 import { Worker, type Processor } from "bullmq";
 import { redisConnection } from "@config/redis.config";
-import { AppDataSource } from "@shared/infra/typeorm";
+import { TipecDataSource } from "@shared/infra/typeorm";
 import type { NomeFila } from "./filas";
 
 /**
@@ -26,7 +26,7 @@ async function iniciar(): Promise<void> {
 
   // O worker não aplica migrations: isso é papel da API.
   process.env.DB_MIGRATIONS_RUN = "false";
-  await AppDataSource.initialize();
+  await TipecDataSource.initialize();
 
   const workers = entradas.map(([nome, processador]) => {
     const worker = new Worker(nome, processador, { connection: redisConnection, concurrency: 2 });
@@ -39,7 +39,7 @@ async function iniciar(): Promise<void> {
 
   const encerrar = async () => {
     await Promise.all(workers.map((w) => w.close()));
-    await AppDataSource.destroy();
+    await TipecDataSource.destroy();
     process.exit(0);
   };
   process.on("SIGTERM", encerrar);

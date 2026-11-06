@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { garantirTransicao, podeExcluir, podeMudarStatus } from "./reuniao";
 
 describe("transições de status da reunião", () => {
@@ -9,7 +10,7 @@ describe("transições de status da reunião", () => {
   it("bloqueia voltar ou pular etapas", () => {
     expect(podeMudarStatus("AGENDADA", "FINALIZADA")).toBe(false);
     expect(podeMudarStatus("FINALIZADA", "EM_ANDAMENTO")).toBe(false);
-    expect(() => garantirTransicao("CANCELADA", "EM_ANDAMENTO")).toThrow(/CANCELADA/);
+    expect(() => garantirTransicao("CANCELADA", "EM_ANDAMENTO")).toThrow(expect.objectContaining({ statusCode: 409 }));
   });
 
   it("só exclui reunião que não foi iniciada", () => {

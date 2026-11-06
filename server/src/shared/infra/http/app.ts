@@ -1,68 +1,75 @@
 import "reflect-metadata";
 import "express-async-errors";
-import "@/config/env";
 import "@shared/container";
+import "@shared/infra/typeorm";
 
-import cors from "cors";
+import { TipecDataSource } from "@/shared/infra/typeorm";
+
 import express from "express";
-import helmet from "helmet";
-import swaggerUi from "swagger-ui-express";
+import cors from "cors";
+import { routes } from "@/shared/infra/http/routes";
+import { healthRoutes } from "@/shared/infra/http/routes/health.routes";
+import ensureAuthenticate from "@middleawares/ensureAuthenticated";
+import ensurePlanoAtivo from "@middleawares/ensurePlanoAtivo";
+import throwAppError from "@middleawares/throwAppError";
+
 import corsConfig from "@config/cors.config";
-import ensureRateLimit from "@middlewares/ensureRateLimit";
-import throwAppError from "@middlewares/throwAppError";
-import { fecharFilas } from "@shared/infra/queue/filas";
-import { AppDataSource } from "@shared/infra/typeorm";
-import { routes } from "./routes";
-import swaggerDocs from "./swagger/swaggerDocs";
+import helmet from "helmet";
 
-export function criarApp(): express.Application {
-  const app = express();
-  // Atrás de proxy reverso / Cloudflare Tunnel: usa o IP real no limite de requisições.
-  app.set("trust proxy", Number(process.env.TRUST_PROXY ?? 1));
-  app.disable("x-powered-by");
-  app.use(helmet());
-  app.use(cors(corsConfig.corsOptions));
-  app.use(express.json({ limit: "100kb" }));
-  app.use((_req, res, next) => {
-    res.setHeader("Cache-Control", "no-store");
-    next();
-  });
-  app.use(ensureRateLimit());
+import swaggerUi from "swagger-ui-express";
+import swaggerDocs from "@/shared/infra/http/swagger/swaggerDocs";
+import ensureRateLimit from "@middleawares/ensureRateLimit";
 
-  // Swagger só fora de produção: em produção ele entregaria o mapa de todas as rotas.
-  if (process.env.NODE_ENV !== "production" || process.env.SWAGGER_PUBLICO === "true") {
-    app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+class App {
+  private readonly app: express.Application;
+
+  constructor() {
+    this.app = express();
+    // Render fica atrás de um proxy: sem isso todos os acessos teriam o mesmo
+    // IP e o limite de requisições valeria para todos os usuários juntos.
+    this.app.set("trust proxy", 1);
+    this.app.disable("x-powered-by");
+    this.app.use(express.json({ limit: "100kb" }));
+    this.app.use((_req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
+    this.app.use(cors(corsConfig.corsOptions));
+    this.app.use(ensureRateLimit());
+    this.app.use(helmet());
+
+    // Swagger: só fora de produção. Em produção ele entregaria o mapa de todas
+    // as rotas (inclusive /admin); SWAGGER_PUBLICO=true libera de propósito.
+    if (process.env.NODE_ENV !== "production" || process.env.SWAGGER_PUBLICO === "true") {
+      this.app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs()));
+    }
+
+    // Público: usado pelo healthcheck do Docker e pelo monitoramento.
+    this.app.use(healthRoutes);
+
+    this.app.use(ensureAuthenticate);
+    // Teste grátis vencido sem pagamento: conta só leitura.
+    this.app.use(ensurePlanoAtivo);
+
+    this.app.use(routes);
+    this.app.use(throwAppError as any);
   }
 
-  app.use("/api/v1", routes);
-  app.use((_req, res) => {
-    res.status(404).json({ message: "Rota não encontrada." });
-  });
-  app.use(throwAppError);
-  return app;
-}
+  public async start(port: number): Promise<void> {
+    try {
+      await TipecDataSource.initialize().then(() => {
+        console.log(
+          `[Senior AI] - Conexão com banco ${TipecDataSource.name} realizada com sucesso.`,
+        );
+      });
 
-export async function iniciarServidor(porta: number): Promise<void> {
-  try {
-    await AppDataSource.initialize();
-    console.log("[Senior AI] Banco conectado e migrations aplicadas.");
-  } catch (erro) {
-    // Sem banco a API não funciona: encerra para o Docker reiniciar.
-    console.error("[Senior AI] Falha ao conectar no banco:", erro);
-    process.exit(1);
+      this.app.listen(port, "0.0.0.0", () => {
+        console.log(`[Senior AI API] - Servidor rodando na porta ${port}`);
+      });
+
+    } catch (error) {
+      // Sem banco a API não funciona: encerra para o Render/Docker reiniciar.
+      console.error("[Senior AI DB Error] - ", error);
+      process.exit(1);
+    }
   }
-
-  const servidor = criarApp().listen(porta, "0.0.0.0", () => {
-    console.log(`[Senior AI] API em http://localhost:${porta}/api/v1`);
-  });
-
-  const encerrar = () => {
-    servidor.close(async () => {
-      await fecharFilas();
-      await AppDataSource.destroy();
-      process.exit(0);
-    });
-  };
-  process.on("SIGTERM", encerrar);
-  process.on("SIGINT", encerrar);
 }
+
+export default App;

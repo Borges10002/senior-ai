@@ -4,3 +4,6 @@ node_modules/
 .env.*.local
 *.apk
 .DS_Store
+
+# web/.env só tem a URL pública da API (sem segredos)
+!web/.env

@@ -1,8 +1,12 @@
 node_modules
-dist
+build
 coverage
-tmp
-storage/
 .env
 .env.local
 .env.online
+.env.vps
+tmp
+storage/anexos
+dist
+storage/
+dados-exportados/

@@ -1,26 +1,27 @@
+import { describe, expect, it } from "vitest";
 import { RegistrarAuditoriaUseCase } from "@modules/auditoria/useCases/RegistrarAuditoriaUseCase";
-import { AuditoriaRepositoryEmMemoria, ReuniaoRepositoryEmMemoria } from "@shared/testes/repositoriosEmMemoria";
+import { auditoriaEmMemoria, reunioesEmMemoria } from "@shared/testes/repositoriosEmMemoria";
 import { CreateReuniaoUseCase } from "./CreateReuniaoUseCase";
 import { DeleteReuniaoUseCase } from "./DeleteReuniaoUseCase";
 import { GetReuniaoUseCase } from "./GetReuniaoUseCase";
 import { MudarStatusReuniaoUseCase } from "./MudarStatusReuniaoUseCase";
 import { UpdateReuniaoUseCase } from "./UpdateReuniaoUseCase";
 
-const DONO = "11111111-1111-4111-8111-111111111111";
-const OUTRO = "22222222-2222-4222-8222-222222222222";
+const DONO = 1;
+const OUTRO = 2;
 
 function montar() {
-  const repo = new ReuniaoRepositoryEmMemoria();
-  const auditoriaRepo = new AuditoriaRepositoryEmMemoria();
-  const get = new GetReuniaoUseCase(repo);
+  const repo = reunioesEmMemoria();
+  const auditoriaRepo = auditoriaEmMemoria();
+  const get = new GetReuniaoUseCase(repo as any);
   return {
     repo,
     auditoriaRepo,
-    criar: new CreateReuniaoUseCase(repo),
+    criar: new CreateReuniaoUseCase(repo as any),
     get,
-    atualizar: new UpdateReuniaoUseCase(repo, get),
-    status: new MudarStatusReuniaoUseCase(repo, get),
-    excluir: new DeleteReuniaoUseCase(repo, get, new RegistrarAuditoriaUseCase(auditoriaRepo)),
+    atualizar: new UpdateReuniaoUseCase(repo as any, get),
+    status: new MudarStatusReuniaoUseCase(repo as any, get),
+    excluir: new DeleteReuniaoUseCase(repo as any, get, new RegistrarAuditoriaUseCase(auditoriaRepo as any)),
   };
 }
 
@@ -28,7 +29,7 @@ describe("reuniões", () => {
   it("cria como AGENDADA vinculada ao proprietário", async () => {
     const { criar } = montar();
     const r = await criar.execute(DONO, { titulo: "  Integração ERP " });
-    expect(r).toMatchObject({ titulo: "Integração ERP", status: "AGENDADA", proprietario_id: DONO });
+    expect(r).toMatchObject({ titulo: "Integração ERP", status: "AGENDADA", codusuario: DONO });
   });
 
   it("recusa término antes do início", async () => {
@@ -39,7 +40,7 @@ describe("reuniões", () => {
         inicio_previsto: new Date("2026-11-04T10:00:00Z"),
         fim_previsto: new Date("2026-11-04T09:00:00Z"),
       }),
-    ).rejects.toThrow(/término/);
+    ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining("término") });
   });
 
   it("não deixa outro usuário ver, alterar ou excluir (RN014)", async () => {
@@ -68,8 +69,8 @@ describe("reuniões", () => {
 
     const agendada = await criar.execute(DONO, { titulo: "B" });
     await excluir.execute(agendada.id, DONO);
-    expect(repo.itens.map((r) => r.id)).toEqual([iniciada.id]);
-    expect(auditoriaRepo.itens[0]).toMatchObject({ acao: "reuniao.excluida", entidade_id: agendada.id });
+    expect(repo.dados.map((r) => r.id)).toEqual([iniciada.id]);
+    expect(auditoriaRepo.dados[0]).toMatchObject({ acao: "reuniao.excluida", entidade_id: agendada.id });
   });
 
   it("não altera reunião finalizada", async () => {

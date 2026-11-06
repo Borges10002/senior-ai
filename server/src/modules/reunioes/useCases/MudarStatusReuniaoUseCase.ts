@@ -1,6 +1,6 @@
 import { inject, injectable } from "tsyringe";
 import { garantirTransicao, type StatusReuniao } from "@modules/reunioes/domain/reuniao";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 import { GetReuniaoUseCase } from "./GetReuniaoUseCase";
 
@@ -21,8 +21,8 @@ class MudarStatusReuniaoUseCase {
     private getReuniao: GetReuniaoUseCase,
   ) {}
 
-  async execute(id: string, proprietarioId: string, acao: Acao, agora = new Date()): Promise<Reuniao> {
-    const reuniao = await this.getReuniao.execute(id, proprietarioId);
+  async execute(id: string, codusuario: number, acao: Acao, agora = new Date()): Promise<Reuniao> {
+    const reuniao = await this.getReuniao.execute(id, codusuario);
     const destino = DESTINO[acao];
     garantirTransicao(reuniao.status, destino);
 

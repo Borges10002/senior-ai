@@ -1,16 +1,41 @@
 {
-  "name": "senior-ai-web",
-  "version": "0.1.0",
+  "name": "senior-ai",
+  "version": "1.0.0",
   "description": "Assistente executivo inteligente",
   "productName": "Senior AI",
+  "author": "Borges10002 <borges10002@gmail.com>",
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "vitest run",
     "dev": "quasar dev",
     "build": "quasar build",
     "postinstall": "quasar prepare",
-    "test": "vitest run",
-    "typecheck": "vue-tsc --noEmit"
+    "test:watch": "vitest",
+    "test:browser": "node scripts/test-security-browser.cjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.16.4",
+    "apexcharts": "^5.16.0",
+    "axios": "^1.2.1",
+    "core-js": "^3.6.5",
+    "lodash-es": "^4.17.21",
+    "quasar": "^2.16.0",
+    "vue": "^3.4.18",
+    "vue-router": "^4.0.0",
+    "vue3-apexcharts": "^1.11.3",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@quasar/app-webpack": "^4.1.0",
+    "@types/node": "^22.20.5",
+    "autoprefixer": "^10.4.2",
+    "ts-loader": "^9.4.2",
+    "typescript": "~5.5.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
   },
   "browserslist": [
     "last 10 Chrome versions",
@@ -19,27 +44,23 @@
     "last 7 Safari versions",
     "last 8 Android versions",
     "last 8 ChromeAndroid versions",
-    "last 10 iOS versions"
+    "last 8 FirefoxAndroid versions",
+    "last 10 iOS versions",
+    "last 5 Opera versions"
   ],
   "engines": {
-    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
   },
-  "dependencies": {
-    "@quasar/extras": "^1.16.17",
-    "axios": "^1.21.0",
-    "core-js": "^3.51.0",
-    "quasar": "^2.35.2",
-    "vue": "^3.5.44",
-    "vue-router": "^4.5.1"
-  },
-  "devDependencies": {
-    "@quasar/app-webpack": "^4.4.5",
-    "@types/node": "^22.20.5",
-    "autoprefixer": "^10.4.21",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.5.4",
-    "vite": "^8.3.5",
-    "vitest": "^5.1.0",
-    "vue-tsc": "^2.2.12"
+  "overrides": {
+    "glob": "14.0.3",
+    "minimatch": "11.0.4",
+    "@quasar/render-ssr-error": "2.2.6",
+    "esbuild": "0.28.2",
+    "ws@^7": "7.5.13",
+    "sockjs": {
+      "uuid": "11.1.1"
+    }
   }
 }

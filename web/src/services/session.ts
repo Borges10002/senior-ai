@@ -1,43 +1,18 @@
 import { ref } from "vue";
-import type { Usuario } from "src/domain/models";
 
-/**
- * Access token só em memória. O refresh token fica no sessionStorage (some ao fechar a aba).
- * Antes de produção: migrar o refresh para cookie httpOnly, como no MyFinances.
- */
-const CHAVE_REFRESH = "senior-ai:refresh";
-
-export const sessionUser = ref<Usuario | null>(null);
-let accessToken: string | null = null;
-
-export function getAccessToken(): string | null {
-  return accessToken;
-}
-
-export function getRefreshToken(): string | null {
-  try {
-    return sessionStorage.getItem(CHAVE_REFRESH);
-  } catch {
-    return null;
+// Credentials never enter browser storage. The API owns HttpOnly cookies.
+export const sessionUser = ref<any>(null);
+export const sessionReady = ref(false);
+export let sessionRevision = 0;
+export function clearLegacyCredentials() {
+  for (const key of ["auth_token", "user", "CICLOCAIRU@TIPEC23500/USER", "TIPEC23500-USER-DATA"]) {
+    localStorage.removeItem(key);
   }
 }
-
-export function setSession(dados: { accessToken: string; refreshToken: string; usuario: Usuario }): void {
-  accessToken = dados.accessToken;
-  sessionUser.value = dados.usuario;
-  try {
-    sessionStorage.setItem(CHAVE_REFRESH, dados.refreshToken);
-  } catch {
-    // Navegador sem storage: a sessão dura até recarregar a página.
-  }
+export function setSession(user: any) {
+  sessionRevision++;
+  clearLegacyCredentials();
+  sessionUser.value = user;
+  sessionReady.value = true;
 }
-
-export function clearSession(): void {
-  accessToken = null;
-  sessionUser.value = null;
-  try {
-    sessionStorage.removeItem(CHAVE_REFRESH);
-  } catch {
-    // ignora
-  }
-}
+export function clearSession() { setSession(null); }

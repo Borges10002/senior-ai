@@ -26,7 +26,7 @@ const params = z.object({ id: z.string().uuid() });
 class ReuniaoController {
   async create(request: Request, response: Response): Promise<Response> {
     const dados = dadosReuniao.parse(request.body);
-    const reuniao = await container.resolve(CreateReuniaoUseCase).execute(request.userAuth.id, dados);
+    const reuniao = await container.resolve(CreateReuniaoUseCase).execute(Number(request.userAuth.codigo), dados);
     return response.status(201).json(reuniao);
   }
 
@@ -38,40 +38,40 @@ class ReuniaoController {
         status: z.enum(STATUS_REUNIAO).optional(),
       })
       .parse(request.query);
-    const reunioes = await container.resolve(ListReunioesUseCase).execute(request.userAuth.id, filtro);
+    const reunioes = await container.resolve(ListReunioesUseCase).execute(Number(request.userAuth.codigo), filtro);
     return response.json(reunioes);
   }
 
   async show(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
-    return response.json(await container.resolve(GetReuniaoUseCase).execute(id, request.userAuth.id));
+    return response.json(await container.resolve(GetReuniaoUseCase).execute(id, Number(request.userAuth.codigo)));
   }
 
   async update(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
     const dados = dadosReuniao.partial().parse(request.body);
-    return response.json(await container.resolve(UpdateReuniaoUseCase).execute(id, request.userAuth.id, dados));
+    return response.json(await container.resolve(UpdateReuniaoUseCase).execute(id, Number(request.userAuth.codigo), dados));
   }
 
   async delete(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
-    await container.resolve(DeleteReuniaoUseCase).execute(id, request.userAuth.id, request.ip);
+    await container.resolve(DeleteReuniaoUseCase).execute(id, Number(request.userAuth.codigo), request.ip);
     return response.status(204).send();
   }
 
   async iniciar(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
-    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, request.userAuth.id, "iniciar"));
+    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, Number(request.userAuth.codigo), "iniciar"));
   }
 
   async finalizar(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
-    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, request.userAuth.id, "finalizar"));
+    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, Number(request.userAuth.codigo), "finalizar"));
   }
 
   async cancelar(request: Request, response: Response): Promise<Response> {
     const { id } = params.parse(request.params);
-    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, request.userAuth.id, "cancelar"));
+    return response.json(await container.resolve(MudarStatusReuniaoUseCase).execute(id, Number(request.userAuth.codigo), "cancelar"));
   }
 }
 

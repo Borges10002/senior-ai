@@ -22,5 +22,5 @@ COPY --chown=node:node package.json ./
 USER node
 EXPOSE 3333
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3333/api/v1/health || exit 1
+  CMD wget -qO- http://127.0.0.1:3333/health || exit 1
 CMD ["node", "dist/shared/infra/http/server.js"]

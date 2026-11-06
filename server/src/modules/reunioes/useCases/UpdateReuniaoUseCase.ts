@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 import AppError from "@shared/errors/AppError";
 import { garantirPeriodo, type DadosReuniaoDTO } from "./CreateReuniaoUseCase";
@@ -14,8 +14,8 @@ class UpdateReuniaoUseCase {
     private getReuniao: GetReuniaoUseCase,
   ) {}
 
-  async execute(id: string, proprietarioId: string, dados: Partial<DadosReuniaoDTO>): Promise<Reuniao> {
-    const reuniao = await this.getReuniao.execute(id, proprietarioId);
+  async execute(id: string, codusuario: number, dados: Partial<DadosReuniaoDTO>): Promise<Reuniao> {
+    const reuniao = await this.getReuniao.execute(id, codusuario);
     if (reuniao.status === "FINALIZADA" || reuniao.status === "CANCELADA") {
       throw new AppError("Reunião finalizada ou cancelada não pode ser alterada.", 409);
     }

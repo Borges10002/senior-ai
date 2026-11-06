@@ -1,11 +1,11 @@
 declare namespace Express {
   export interface Request {
     userAuth: {
-      id: string;
+      codigo: string;
+      usuario: string;
       nome: string;
-      email: string;
-      perfil: "proprietario" | "administrador" | "participante" | "convidado";
-      sessaoId: string;
+      email?: string;
+      nivelAcesso: number;
     };
   }
 }

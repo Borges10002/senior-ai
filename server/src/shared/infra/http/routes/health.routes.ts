@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Redis from "ioredis";
 import { redisConnection } from "@config/redis.config";
-import { AppDataSource } from "@shared/infra/typeorm";
+import { TipecDataSource } from "@shared/infra/typeorm";
 
 const healthRoutes = Router();
 
@@ -19,7 +19,7 @@ async function redisOk(): Promise<boolean> {
 
 /** Público: usado pelo healthcheck do Docker e pelo monitoramento. Não expõe detalhes de erro. */
 healthRoutes.get("/health", async (_req, res) => {
-  const banco = await AppDataSource.query("SELECT 1").then(() => true, () => false);
+  const banco = await TipecDataSource.query("SELECT 1").then(() => true, () => false);
   const redis = await redisOk();
   const ok = banco && redis;
   res.status(ok ? 200 : 503).json({ status: ok ? "ok" : "degradado", banco, redis });

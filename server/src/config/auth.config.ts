@@ -1,12 +1,12 @@
 import "@/config/env";
 
-// Segredos vêm só do ambiente; os padrões abaixo são prazos e identificadores.
+// Tudo vem do ambiente; os padrões abaixo não são segredos, só prazos e ids.
 export default {
   jwt: {
-    secret: process.env.JWT_SECRET as string,
+    secretToken: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || "15m",
-    refreshSecret: process.env.JWT_REFRESH_SECRET as string,
-    refreshExpiresInDias: Number(process.env.JWT_REFRESH_EXPIRES_DAYS || 7),
-    issuer: process.env.JWT_ISSUER || "senior-ai-api",
+    refreshSecretToken: process.env.JWT_REFRESH_SECRET,
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "2d",
+    jwtid: process.env.JWT_ID || "senior-ai-api",
   },
 };

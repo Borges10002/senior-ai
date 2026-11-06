@@ -1,33 +1,41 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-import { sessaoValida, type Sessao } from "@/domain/models";
+import type { Sessao } from "@/domain/models";
 
 const CHAVE = "seniorai.sessao";
 
-// Na web os tokens ficam só em memória; no celular, no SecureStore (Keystore/Keychain).
+// Na web, tokens ficam só em memória até fechar/recarregar a página.
 const web = Platform.OS === "web";
 let sessaoWeb: Sessao | null = null;
 
 export async function carregarSessao(): Promise<Sessao | null> {
-  if (web) return sessaoWeb;
   try {
+    if (web) {
+      globalThis.localStorage?.removeItem(CHAVE);
+      return sessaoWeb;
+    }
     const bruto = await SecureStore.getItemAsync(CHAVE);
-    const sessao = bruto ? JSON.parse(bruto) : null;
-    if (sessaoValida(sessao)) return sessao;
-    if (bruto) await limparSessao();
-    return null;
+    if (!bruto) return null;
+    const sessao = JSON.parse(bruto) as Sessao;
+    if (!sessao || typeof sessao.token !== "string" || !sessao.token ||
+        typeof sessao.refreshToken !== "string" || !sessao.refreshToken ||
+        !Number.isSafeInteger(sessao.user?.codigo) || typeof sessao.user?.nivelAcesso !== "number") {
+      await limparSessao();
+      return null;
+    }
+    return sessao;
   } catch {
     return null;
   }
 }
 
 export async function salvarSessao(sessao: Sessao): Promise<void> {
+  const bruto = JSON.stringify(sessao);
   if (web) {
+    globalThis.localStorage?.removeItem(CHAVE);
     sessaoWeb = sessao;
-    return;
-  }
-  await SecureStore.setItemAsync(CHAVE, JSON.stringify(sessao), {
+  } else await SecureStore.setItemAsync(CHAVE, bruto, {
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   });
 }
@@ -35,7 +43,7 @@ export async function salvarSessao(sessao: Sessao): Promise<void> {
 export async function limparSessao(): Promise<void> {
   if (web) {
     sessaoWeb = null;
-    return;
+    globalThis.localStorage?.removeItem(CHAVE);
   }
-  await SecureStore.deleteItemAsync(CHAVE);
+  else await SecureStore.deleteItemAsync(CHAVE);
 }

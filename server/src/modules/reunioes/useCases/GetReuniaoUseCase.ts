@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 import AppError from "@shared/errors/AppError";
 
@@ -11,8 +11,8 @@ class GetReuniaoUseCase {
     private reuniaoRepository: IReuniaoRepository,
   ) {}
 
-  async execute(id: string, proprietarioId: string): Promise<Reuniao> {
-    const reuniao = await this.reuniaoRepository.findByIdDoProprietario(id, proprietarioId);
+  async execute(id: string, codusuario: number): Promise<Reuniao> {
+    const reuniao = await this.reuniaoRepository.findByIdDoProprietario(id, codusuario);
     if (!reuniao) throw new AppError("Reunião não encontrada.", 404);
     return reuniao;
   }

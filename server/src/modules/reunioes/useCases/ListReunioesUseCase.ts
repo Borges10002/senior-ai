@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { FiltroReunioes } from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 
@@ -10,8 +10,8 @@ class ListReunioesUseCase {
     private reuniaoRepository: IReuniaoRepository,
   ) {}
 
-  execute(proprietarioId: string, filtro: FiltroReunioes = {}): Promise<Reuniao[]> {
-    return this.reuniaoRepository.listByProprietario(proprietarioId, filtro);
+  execute(codusuario: number, filtro: FiltroReunioes = {}): Promise<Reuniao[]> {
+    return this.reuniaoRepository.listByProprietario(codusuario, filtro);
   }
 }
 

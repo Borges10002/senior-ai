@@ -1,16 +1,17 @@
-export type Perfil = "proprietario" | "administrador" | "participante" | "convidado";
-
+// Mantido igual a web/src/domain/models.ts — altere os dois juntos.
 export interface Usuario {
-  id: string;
+  codigo: number;
+  usuario: string;
   nome: string;
   email: string;
-  perfil: Perfil;
+  nomeAbreviado: string;
+  nivelAcesso: number;
 }
 
 export interface Sessao {
-  accessToken: string;
+  token: string;
   refreshToken: string;
-  usuario: Usuario;
+  user: Usuario;
 }
 
 export type StatusReuniao = "AGENDADA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";
@@ -19,24 +20,11 @@ export interface Reuniao {
   id: string;
   titulo: string;
   assunto: string | null;
+  objetivo: string | null;
+  local: string | null;
   status: StatusReuniao;
   inicio_previsto: string | null;
-}
-
-export const ROTULO_STATUS: Record<StatusReuniao, string> = {
-  AGENDADA: "Agendada",
-  EM_ANDAMENTO: "Em andamento",
-  FINALIZADA: "Finalizada",
-  CANCELADA: "Cancelada",
-};
-
-/** Confere o formato antes de usar uma sessão lida do armazenamento. */
-export function sessaoValida(valor: unknown): valor is Sessao {
-  const s = valor as Sessao;
-  return (
-    !!s &&
-    typeof s.accessToken === "string" && !!s.accessToken &&
-    typeof s.refreshToken === "string" && !!s.refreshToken &&
-    typeof s.usuario?.id === "string"
-  );
+  fim_previsto: string | null;
+  iniciada_em: string | null;
+  finalizada_em: string | null;
 }

@@ -10,8 +10,9 @@ export interface FiltroReunioes {
 export default interface IReuniaoRepository {
   create(reuniao: Reuniao): Promise<Reuniao>;
   /** Busca já restrita ao proprietário (RN014): reunião de outro usuário volta como null. */
-  findByIdDoProprietario(id: string, proprietarioId: string): Promise<Reuniao | null>;
-  listByProprietario(proprietarioId: string, filtro: FiltroReunioes): Promise<Reuniao[]>;
+  findByIdDoProprietario(id: string, codusuario: number): Promise<Reuniao | null>;
+  listByProprietario(codusuario: number, filtro: FiltroReunioes): Promise<Reuniao[]>;
   save(reuniao: Reuniao): Promise<Reuniao>;
   delete(id: string): Promise<void>;
+  countAll(): Promise<number>;
 }

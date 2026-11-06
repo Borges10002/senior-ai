@@ -1,0 +1,40 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGlow" x1="40" y1="28" x2="212" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.45"/>
+      <stop offset="0.52" stop-color="#1D4ED8" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#07111F" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="strokeMain" x1="64" y1="52" x2="188" y2="212" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.58" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="nodeFill" x1="90" y1="64" x2="182" y2="208" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#BAE6FD"/>
+    </linearGradient>
+    <filter id="softGlow" x="18" y="14" width="220" height="228" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+    </filter>
+    <filter id="nodeGlow" x="145" y="31" width="80" height="80" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+    </filter>
+  </defs>
+
+  <g opacity="0.9" filter="url(#softGlow)">
+    <path d="M69 69C69 56.2975 79.2975 46 92 46H147L166 28H198V60H175L156 78H98C91.3726 78 86 83.3726 86 90V108H149L165 93H197V125H171L154 140H86V162H167L183 177H214V209H181L165 193H98C81.9837 193 69 180.016 69 164V69Z" fill="url(#bgGlow)"/>
+  </g>
+
+  <path d="M69 69C69 56.2975 79.2975 46 92 46H147L166 28H198V60H175L156 78H98C91.3726 78 86 83.3726 86 90V108H149L165 93H197V125H171L154 140H86V162H167L183 177H214V209H181L165 193H98C81.9837 193 69 180.016 69 164V69Z" stroke="url(#strokeMain)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="182" cy="44" r="10" fill="url(#nodeFill)"/>
+  <circle cx="181" cy="109" r="10" fill="url(#nodeFill)"/>
+  <circle cx="198" cy="193" r="10" fill="url(#nodeFill)"/>
+
+  <g opacity="0.85" filter="url(#nodeGlow)">
+    <circle cx="182" cy="71" r="22" fill="#22D3EE"/>
+  </g>
+  <circle cx="182" cy="71" r="18" fill="url(#nodeFill)"/>
+  <circle cx="182" cy="71" r="9" fill="#0F172A"/>
+</svg>

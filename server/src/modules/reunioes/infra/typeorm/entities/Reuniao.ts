@@ -1,15 +1,15 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import type { StatusReuniao } from "@modules/reunioes/domain/reuniao";
 
-@Entity("reunioes")
-@Index(["proprietario_id", "inicio_previsto"])
+@Entity("DIMIREUNIAO")
+@Index("IDX_REUNIAO_USUARIO_INICIO", ["codusuario", "inicio_previsto"])
 class Reuniao {
   @PrimaryColumn("uuid")
   id: string;
 
   /** RN001: toda reunião pertence a um proprietário. */
-  @Column("uuid")
-  proprietario_id: string;
+  @Column({ type: "numeric" })
+  codusuario: number;
 
   @Column({ type: "varchar", length: 200 })
   titulo: string;

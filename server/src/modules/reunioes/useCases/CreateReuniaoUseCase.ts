@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { inject, injectable } from "tsyringe";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 import AppError from "@shared/errors/AppError";
 
@@ -26,12 +26,12 @@ class CreateReuniaoUseCase {
     private reuniaoRepository: IReuniaoRepository,
   ) {}
 
-  async execute(proprietarioId: string, dados: DadosReuniaoDTO): Promise<Reuniao> {
+  async execute(codusuario: number, dados: DadosReuniaoDTO): Promise<Reuniao> {
     garantirPeriodo(dados.inicio_previsto, dados.fim_previsto);
     return this.reuniaoRepository.create(
       Object.assign(new Reuniao(), {
         id: randomUUID(),
-        proprietario_id: proprietarioId,
+        codusuario: codusuario,
         titulo: dados.titulo.trim(),
         assunto: dados.assunto?.trim() || null,
         objetivo: dados.objetivo?.trim() || null,

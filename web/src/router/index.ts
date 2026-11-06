@@ -1,15 +1,26 @@
-import { defineRouter } from "#q-app/wrappers";
-import { createMemoryHistory, createRouter, createWebHashHistory, createWebHistory } from "vue-router";
-import { restaurarSessao } from "src/boot/axios";
-import { sessionUser } from "src/services/session";
-import routes from "./routes";
+import { authorizeRoute } from './authGuard';
+import { defineRouter } from '#q-app/wrappers';
+import {
+  createMemoryHistory,
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+} from 'vue-router';
+import routes from './routes';
 
-export default defineRouter(function () {
+/*
+ * If not building with SSR mode, you can
+ * directly export the Router instantiation;
+ *
+ * The function below can be async too; either use
+ * async/await or return a Promise which resolves
+ * with the Router instance.
+ */
+
+export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
-    : process.env.VUE_ROUTER_MODE === "history"
-      ? createWebHistory
-      : createWebHashHistory;
+    : (process.env.VUE_ROUTER_MODE === 'history' ? createWebHistory : createWebHashHistory);
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -17,13 +28,7 @@ export default defineRouter(function () {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeEach(async (to) => {
-    await restaurarSessao();
-    const autenticado = !!sessionUser.value;
-    if (to.matched.some((r) => r.meta.requiresAuth) && !autenticado) return "/login";
-    if (to.path === "/login" && autenticado) return "/app";
-    return true;
-  });
+  Router.beforeEach(authorizeRoute);
 
   return Router;
 });

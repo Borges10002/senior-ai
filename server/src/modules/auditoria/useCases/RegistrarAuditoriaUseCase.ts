@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
 import { inject, injectable } from "tsyringe";
-import type IAuditoriaRepository from "@modules/auditoria/domain/repositories/IAuditoriaRepository";
+import IAuditoriaRepository from "@modules/auditoria/domain/repositories/IAuditoriaRepository";
 import { RegistroAuditoria } from "@modules/auditoria/infra/typeorm/entities/RegistroAuditoria";
 
 export interface RegistrarAuditoriaDTO {
-  usuarioId: string | null;
+  codusuario: number | null;
   acao: string;
   entidade: string;
   entidadeId?: string | null;
@@ -24,7 +24,7 @@ class RegistrarAuditoriaUseCase {
     await this.auditoriaRepository.create(
       Object.assign(new RegistroAuditoria(), {
         id: randomUUID(),
-        usuario_id: dto.usuarioId,
+        codusuario: dto.codusuario,
         acao: dto.acao,
         entidade: dto.entidade,
         entidade_id: dto.entidadeId ?? null,

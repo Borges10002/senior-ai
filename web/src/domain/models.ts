@@ -1,10 +1,17 @@
-export type Perfil = "proprietario" | "administrador" | "participante" | "convidado";
-
+// Mantido igual a mobile/src/domain/models.ts — altere os dois juntos.
 export interface Usuario {
-  id: string;
+  codigo: number;
+  usuario: string;
   nome: string;
   email: string;
-  perfil: Perfil;
+  nomeAbreviado: string;
+  nivelAcesso: number;
+}
+
+export interface Sessao {
+  token: string;
+  refreshToken: string;
+  user: Usuario;
 }
 
 export type StatusReuniao = "AGENDADA" | "EM_ANDAMENTO" | "FINALIZADA" | "CANCELADA";

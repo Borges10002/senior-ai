@@ -1,3 +1,5 @@
+name: senior-ai
+
 services:
   database:
     image: postgres:16-alpine
@@ -5,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
     # Só na máquina local (para `npm run dev` fora do Docker). Nunca exponha publicamente.
     ports:
@@ -49,7 +51,9 @@ services:
       - .env
     environment:
       DB_HOST: database
+      DB_PORT: 5432
       REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "127.0.0.1:3333:3333"
     depends_on:
@@ -75,7 +79,9 @@ services:
       - .env
     environment:
       DB_HOST: database
+      DB_PORT: 5432
       REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       api:
         condition: service_healthy

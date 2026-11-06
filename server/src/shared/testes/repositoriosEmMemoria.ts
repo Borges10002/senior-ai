@@ -1,77 +1,103 @@
-import type IAuditoriaRepository from "@modules/auditoria/domain/repositories/IAuditoriaRepository";
-import type { RegistroAuditoria } from "@modules/auditoria/infra/typeorm/entities/RegistroAuditoria";
-import type ISessaoRepository from "@modules/auth/domain/repositories/ISessaoRepository";
-import type { Sessao } from "@modules/auth/infra/typeorm/entities/Sessao";
-import type IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
-import type { FiltroReunioes } from "@modules/reunioes/domain/repositories/IReuniaoRepository";
-import type { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
-import type IUsuarioRepository from "@modules/usuarios/domain/repositories/IUsuarioRepository";
-import type { Usuario } from "@modules/usuarios/infra/typeorm/entities/Usuario";
+import { randomUUID } from "crypto";
 
-const carimbar = <T extends { created_at?: Date; updated_at?: Date }>(item: T): T => {
-  item.created_at ??= new Date();
-  item.updated_at = new Date();
-  return item;
-};
+/**
+ * Repositórios em memória para testes de casos de uso, sem banco.
+ * Implementam só os métodos que os testes usam.
+ */
 
-export class UsuarioRepositoryEmMemoria implements IUsuarioRepository {
-  itens: Usuario[] = [];
-  async findById(id: string) {
-    return this.itens.find((u) => u.id === id) ?? null;
-  }
-  async findByEmail(email: string) {
-    return this.itens.find((u) => u.email === email.trim().toLowerCase()) ?? null;
-  }
-  async create(usuario: Usuario) {
-    this.itens.push(carimbar(usuario));
-    return usuario;
-  }
-  async save(usuario: Usuario) {
-    return carimbar(usuario);
-  }
+export function assinaturasEmMemoria(iniciais: any[] = []) {
+  const dados: any[] = iniciais.map((a) => ({ id: randomUUID(), ...a }));
+  const eventos = new Set<string>();
+  return {
+    dados,
+    async findByUsuario(codusuario: number) {
+      return dados.find((a) => Number(a.codusuario) === codusuario) ?? null;
+    },
+    async findByGatewayAssinatura(id: string) {
+      return dados.find((a) => a.gateway_assinatura_id === id) ?? null;
+    },
+    async create(a: any) {
+      const existente = dados.find((d) => Number(d.codusuario) === Number(a.codusuario));
+      if (existente) return existente;
+      const nova = { ...a, id: randomUUID() };
+      dados.push(nova);
+      return nova;
+    },
+    async update(id: string, parcial: any) {
+      const alvo = dados.find((a) => a.id === id);
+      Object.assign(alvo, parcial);
+      return alvo;
+    },
+    async registrarEvento(evento: any) {
+      if (eventos.has(evento.id)) return false;
+      eventos.add(evento.id);
+      return true;
+    },
+    async resumo() {
+      return {};
+    },
+    async findAll() {
+      return dados;
+    },
+    async eventosPorTipo() {
+      return [];
+    },
+  };
 }
 
-export class SessaoRepositoryEmMemoria implements ISessaoRepository {
-  itens: Sessao[] = [];
-  async create(sessao: Sessao) {
-    this.itens.push(carimbar(sessao));
-    return sessao;
-  }
-  async findById(id: string) {
-    return this.itens.find((s) => s.id === id) ?? null;
-  }
-  async save(sessao: Sessao) {
-    return carimbar(sessao);
-  }
-  async revogarTodasDoUsuario(usuarioId: string) {
-    this.itens.filter((s) => s.usuario_id === usuarioId && !s.revogada_em).forEach((s) => (s.revogada_em = new Date()));
-  }
+export function vendasEmMemoria(iniciais: any[] = []) {
+  const dados: any[] = [...iniciais];
+  return {
+    dados,
+    async findById(id: string) {
+      return dados.find((v) => v.id === id) ?? null;
+    },
+    async findAll() {
+      return [...dados].sort((a, b) => new Date(b.pago_em).getTime() - new Date(a.pago_em).getTime());
+    },
+    async salvar(venda: any) {
+      const existente = dados.find((v) => v.id === venda.id);
+      if (existente) return Object.assign(existente, venda);
+      const nova = { status: "paga", ...venda };
+      dados.push(nova);
+      return nova;
+    },
+  };
 }
 
-export class ReuniaoRepositoryEmMemoria implements IReuniaoRepository {
-  itens: Reuniao[] = [];
-  async create(reuniao: Reuniao) {
-    this.itens.push(carimbar(reuniao));
-    return reuniao;
-  }
-  async findByIdDoProprietario(id: string, proprietarioId: string) {
-    return this.itens.find((r) => r.id === id && r.proprietario_id === proprietarioId) ?? null;
-  }
-  async listByProprietario(proprietarioId: string, { status }: FiltroReunioes) {
-    return this.itens.filter((r) => r.proprietario_id === proprietarioId && (!status || r.status === status));
-  }
-  async save(reuniao: Reuniao) {
-    return carimbar(reuniao);
-  }
-  async delete(id: string) {
-    this.itens = this.itens.filter((r) => r.id !== id);
-  }
+export function reunioesEmMemoria() {
+  const dados: any[] = [];
+  return {
+    dados,
+    async create(r: any) {
+      dados.push(r);
+      return r;
+    },
+    async findByIdDoProprietario(id: string, codusuario: number) {
+      return dados.find((r) => r.id === id && r.codusuario === codusuario) ?? null;
+    },
+    async listByProprietario(codusuario: number, { status }: { status?: string }) {
+      return dados.filter((r) => r.codusuario === codusuario && (!status || r.status === status));
+    },
+    async save(r: any) {
+      return r;
+    },
+    async delete(id: string) {
+      dados.splice(dados.findIndex((r) => r.id === id), 1);
+    },
+    async countAll() {
+      return dados.length;
+    },
+  };
 }
 
-export class AuditoriaRepositoryEmMemoria implements IAuditoriaRepository {
-  itens: RegistroAuditoria[] = [];
-  async create(registro: RegistroAuditoria) {
-    this.itens.push(registro);
-    return registro;
-  }
+export function auditoriaEmMemoria() {
+  const dados: any[] = [];
+  return {
+    dados,
+    async create(registro: any) {
+      dados.push(registro);
+      return registro;
+    },
+  };
 }

@@ -1,14 +1,14 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from "typeorm";
 
-@Entity("auditoria")
-@Index(["entidade", "entidade_id"])
-@Index(["usuario_id", "created_at"])
+@Entity("DIMIAUDITORIA")
+@Index("IDX_AUDITORIA_ENTIDADE", ["entidade", "entidade_id"])
+@Index("IDX_AUDITORIA_USUARIO_DATA", ["codusuario", "created_at"])
 class RegistroAuditoria {
   @PrimaryColumn("uuid")
   id: string;
 
-  @Column({ type: "uuid", nullable: true })
-  usuario_id: string | null;
+  @Column({ type: "numeric", nullable: true })
+  codusuario: number | null;
 
   /** Ex.: auth.login, reuniao.excluida, aprovacao.aprovada */
   @Column({ type: "varchar", length: 80 })

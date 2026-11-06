@@ -1,37 +1,18 @@
-const PLACEHOLDER = /substituir|troque|replace|change.?me|example|exemplo/i;
-
-function segredoFraco(valor: string | undefined): boolean {
-  return !valor || Buffer.byteLength(valor) < 32 || new Set(valor).size < 10 || PLACEHOLDER.test(valor);
-}
-
-/** Recusa subir em produção com segredos de exemplo ou configuração insegura. */
 export function validateProductionSecurity(env: NodeJS.ProcessEnv): void {
   if (env.NODE_ENV !== "production") return;
-
-  for (const nome of ["JWT_SECRET", "JWT_REFRESH_SECRET"] as const) {
-    if (segredoFraco(env[nome])) {
-      throw new Error(`${nome} deve conter um segredo aleatório com pelo menos 32 bytes em produção.`);
+  for (const name of ["JWT_SECRET", "JWT_REFRESH_SECRET"]) {
+    const value = env[name];
+    if (name === "JWT_REFRESH_SECRET" && !value) continue; // A separate key is derived when omitted.
+    if (!value || Buffer.byteLength(value) < 32 || new Set(value).size < 10 || /troque|replace|change.?me|example|exemplo|gere[_ ]/i.test(value)) {
+      throw new Error(name + " deve conter um segredo aleatorio com pelo menos 32 bytes em producao.");
     }
   }
-  if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) {
-    throw new Error("JWT_SECRET e JWT_REFRESH_SECRET devem ser diferentes.");
-  }
-  if (!env.REDIS_PASSWORD || PLACEHOLDER.test(env.REDIS_PASSWORD)) {
-    throw new Error("REDIS_PASSWORD deve ser definido em produção.");
-  }
-
-  const origens = (env.CORS_ORIGINS || "").split(",").map((v) => v.trim()).filter(Boolean);
-  const origemInvalida = (valor: string) => {
-    try {
-      const u = new URL(valor);
-      return u.protocol !== "https:" || u.origin !== valor || !!u.username || !!u.password;
-    } catch {
-      return true;
-    }
-  };
-  if (!origens.length || origens.some(origemInvalida)) {
-    throw new Error("CORS_ORIGINS deve listar origens HTTPS exatas em produção.");
-  }
-  if (env.DB_SYNCHRONIZE === "true") throw new Error("DB_SYNCHRONIZE não pode ser true em produção.");
-  if (env.DEBUG === "true") throw new Error("DEBUG não pode ser true em produção.");
+  if (env.JWT_REFRESH_SECRET && env.JWT_REFRESH_SECRET === env.JWT_SECRET) throw new Error("JWT_SECRET e JWT_REFRESH_SECRET devem ser diferentes.");
+  const origins = (env.CORS_ORIGINS || "").split(",").map(v => v.trim()).filter(Boolean);
+  if (!origins.length || origins.some(value => {
+    try { const u = new URL(value); return u.protocol !== "https:" || u.origin !== value || !!u.username || !!u.password; }
+    catch { return true; }
+  })) throw new Error("CORS_ORIGINS deve listar origens HTTPS exatas em producao.");
+  if (env.DB_SYNCHRONIZE === "true") throw new Error("DB_SYNCHRONIZE nao pode ser true em producao.");
+  if (env.DEBUG === "true") throw new Error("DEBUG nao pode ser true em producao.");
 }

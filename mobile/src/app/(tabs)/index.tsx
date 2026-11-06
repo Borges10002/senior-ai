@@ -1,76 +1,54 @@
-import { useCallback, useState } from "react";
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { View } from "react-native";
 
-import { ROTULO_STATUS, type Reuniao } from "@/domain/models";
-import { reunioesService } from "@/infra/api/reunioes-service";
+import { contarPorStatus, formatarDataHora, proximasReunioes } from "@/domain/reuniao";
+import { useAuth } from "@/state/auth-context";
+import { useReunioes } from "@/state/use-reunioes";
+import { Botao, Cartao, Secao, Tela, Texto, Vazio } from "@/ui/components/base";
 import { espaco, useTema } from "@/ui/theme";
 
-export default function Reunioes() {
+export default function InicioScreen() {
+  const { usuario } = useAuth();
   const { cores } = useTema();
-  const [reunioes, setReunioes] = useState<Reuniao[]>([]);
-  const [carregando, setCarregando] = useState(false);
-
-  const carregar = useCallback(async () => {
-    setCarregando(true);
-    try {
-      setReunioes(await reunioesService.listar());
-    } catch (e) {
-      Alert.alert("Reuniões", e instanceof Error ? e.message : "Erro ao carregar.");
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void carregar();
-    }, [carregar]),
-  );
-
-  async function alternar(r: Reuniao) {
-    try {
-      if (r.status === "AGENDADA") await reunioesService.iniciar(r.id);
-      else if (r.status === "EM_ANDAMENTO") await reunioesService.finalizar(r.id);
-      await carregar();
-    } catch (e) {
-      Alert.alert("Reuniões", e instanceof Error ? e.message : "Erro ao atualizar.");
-    }
-  }
+  const { reunioes, carregando, erro, recarregar } = useReunioes();
+  const proximas = proximasReunioes(reunioes);
+  const indicadores = [
+    { rotulo: "Agendadas", valor: contarPorStatus(reunioes, "AGENDADA") },
+    { rotulo: "Em andamento", valor: contarPorStatus(reunioes, "EM_ANDAMENTO") },
+    { rotulo: "Realizadas", valor: contarPorStatus(reunioes, "FINALIZADA") },
+  ];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }} edges={["top"]}>
-      <Text style={[styles.titulo, { color: cores.texto }]}>Reuniões</Text>
-      <FlatList
-        data={reunioes}
-        keyExtractor={(r) => r.id}
-        contentContainerStyle={{ padding: espaco.lg, gap: espaco.sm }}
-        refreshControl={<RefreshControl refreshing={carregando} onRefresh={carregar} />}
-        ListEmptyComponent={
-          carregando ? undefined : <Text style={{ color: cores.textoSecundario }}>Nenhuma reunião cadastrada.</Text>
-        }
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: cores.superficie, borderColor: cores.borda }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: cores.texto, fontWeight: "600" }}>{item.titulo}</Text>
-              <Text style={{ color: cores.textoSecundario }}>{ROTULO_STATUS[item.status]}</Text>
-            </View>
-            {(item.status === "AGENDADA" || item.status === "EM_ANDAMENTO") && (
-              <Pressable accessibilityRole="button" onPress={() => alternar(item)}>
-                <Text style={{ color: cores.primaria, fontWeight: "700" }}>
-                  {item.status === "AGENDADA" ? "Iniciar" : "Finalizar"}
-                </Text>
-              </Pressable>
-            )}
-          </View>
+    <Tela onRefresh={recarregar} atualizando={carregando}>
+      <Texto variante="titulo">Visão geral</Texto>
+      <Texto secundario>{`Olá, ${usuario?.nome?.split(" ")[0] ?? ""}`}</Texto>
+      {erro && <Texto cor={cores.despesa}>{erro}</Texto>}
+
+      <View style={{ flexDirection: "row", gap: espaco.sm }}>
+        {indicadores.map((i) => (
+          <Cartao key={i.rotulo} style={{ flex: 1 }}>
+            <Texto variante="subtitulo">{String(i.valor)}</Texto>
+            <Texto variante="legenda" secundario>{i.rotulo}</Texto>
+          </Cartao>
+        ))}
+      </View>
+
+      <Secao titulo="Próximas reuniões">
+        {proximas.length === 0 && !carregando ? (
+          <Vazio
+            icone="calendar-outline"
+            titulo="Nenhuma reunião agendada"
+            acao={<Botao titulo="Nova reunião" onPress={() => router.push("/reuniao")} />}
+          />
+        ) : (
+          proximas.map((r) => (
+            <Cartao key={r.id} onPress={() => router.push("/reunioes")}>
+              <Texto style={{ fontWeight: "700" }}>{r.titulo}</Texto>
+              <Texto variante="legenda" secundario>{formatarDataHora(r.inicio_previsto)}</Texto>
+            </Cartao>
+          ))
         )}
-      />
-    </SafeAreaView>
+      </Secao>
+    </Tela>
   );
 }
-
-const styles = StyleSheet.create({
-  titulo: { fontSize: 26, fontWeight: "800", paddingHorizontal: espaco.lg, paddingTop: espaco.lg },
-  card: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 14, padding: espaco.lg },
-});
