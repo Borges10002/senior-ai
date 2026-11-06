@@ -26,14 +26,14 @@ jest.mock('expo-router/stack', () => {
 
 test.each([
   [null, ['entrar']],
-  [1, ['(tabs)', 'reuniao', 'assinatura', 'alterar-senha']],
-  [3, ['(tabs)', 'reuniao', 'assinatura', 'alterar-senha', 'vendas']],
+  [1, ['(tabs)', 'reuniao', 'gravar', 'resultado', 'assinatura', 'alterar-senha']],
+  [3, ['(tabs)', 'reuniao', 'gravar', 'resultado', 'assinatura', 'alterar-senha', 'vendas']],
 ] as const)('permissões de navegação para nível %s', async (nivel, permitidas) => {
   jest.mocked(useAuth).mockReturnValue({ usuario: nivel === null ? null : {
     codigo: 1, nivelAcesso: nivel, nome: 'Teste', nomeAbreviado: 'T', usuario: 't', email: 't@example.com',
   }, carregando: false, entrar: jest.fn(), cadastrar: jest.fn(), sair: jest.fn() });
   await render(<RootLayout />);
-  for (const rota of ['entrar', '(tabs)', 'reuniao', 'assinatura', 'alterar-senha', 'vendas']) {
+  for (const rota of ['entrar', '(tabs)', 'reuniao', 'gravar', 'resultado', 'assinatura', 'alterar-senha', 'vendas']) {
     expect(!!screen.queryByText(rota)).toBe((permitidas as readonly string[]).includes(rota));
   }
 });

@@ -13,6 +13,17 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('expo-router/stack', () => ({ __esModule: true, default: { Screen: () => null } }));
 jest.mock('@/state/auth-context', () => ({ useAuth: jest.fn() }));
+jest.mock('@/infra/api/gravacao-service', () => ({
+  gravacaoService: {
+    resultado: jest.fn(async () => ({
+      reuniao: { id: 'r1', titulo: 'Integração ERP', status: 'FINALIZADA' },
+      gravacoes: [{ id: 'g1', status: 'CONCLUIDA', erro: null, duracao_seg: 60 }],
+      anotacoes: [{ id: 'a1', resumo: 'Resumo da reunião', assuntos: [], decisoes: [{ descricao: 'Decidido', horario: '00:00:05' }], tarefas: [], pendencias: [] }],
+      agendamentos: [{ id: 'ag1', titulo: 'Validação', inicio: '2026-11-10T15:00:00Z', status: 'CRIADO', sugestao_inicio: null }],
+      transcricao: [{ inicio: 1, fim: 2, texto: 'Primeira fala' }],
+    })),
+  },
+}));
 jest.mock('@/infra/api/services', () => ({
   authService: { esqueciSenha: jest.fn(), alterarSenha: jest.fn() },
   reuniaoService: { listar: async () => [], criar: jest.fn(), mudarStatus: jest.fn() },
@@ -22,7 +33,7 @@ jest.mock('@/infra/api/services', () => ({
 
 const casos = [
   ['entrar', 'Senior AI'], ['alterar-senha', 'Alterar senha'],
-  ['reuniao', 'Título'], ['assinatura', 'Falha ao carregar plano'], ['vendas', 'Acesso negado'],
+  ['reuniao', 'Título'], ['gravar', 'Avise os participantes'], ['resultado', 'Integração ERP'], ['assinatura', 'Falha ao carregar plano'], ['vendas', 'Acesso negado'],
   ['(tabs)/index', 'Visão geral'], ['(tabs)/reunioes', 'Reuniões'], ['(tabs)/mais', 'Mais'],
 ] as const;
 
@@ -56,6 +67,24 @@ test('login vazio não envia credenciais', async () => {
   await fireEvent.press(screen.getAllByText('Entrar').at(-1)!);
   expect(await screen.findByText('Informe um e-mail válido.')).toBeTruthy();
   expect(useAuth().entrar).not.toHaveBeenCalled();
+});
+
+test('resultado mostra anotações, agenda e transcrição', async () => {
+  const Componente = require('../src/app/resultado').default;
+  await render(<Componente />);
+  expect(await screen.findByText('Resumo da reunião')).toBeTruthy();
+  expect(screen.getByText('Decidido')).toBeTruthy();
+  expect(screen.getByText('Validação')).toBeTruthy();
+  expect(screen.getByText('Agendada')).toBeTruthy();
+  expect(screen.getByText(/Primeira fala/)).toBeTruthy();
+});
+
+test('gravação só começa depois do aviso aos participantes', async () => {
+  const Componente = require('../src/app/gravar').default;
+  await render(<Componente />);
+  expect(screen.queryByText(/Gravando/)).toBeNull();
+  await fireEvent.press(screen.getByText('Participantes avisados, iniciar gravação'));
+  expect(await screen.findByText(/Gravando/)).toBeTruthy();
 });
 
 test('reunião sem título não é enviada', async () => {

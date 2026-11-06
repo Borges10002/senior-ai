@@ -49,13 +49,20 @@ interface Opcoes {
   publica?: boolean;
 }
 
+export function exigirConexaoSegura() {
+  if (!urlHttpsSegura(API_URL) && !(typeof __DEV__ !== "undefined" && __DEV__ && API_URL.startsWith("http://"))) {
+    throw new ApiError("A conexão com a API exige HTTPS.", 0);
+  }
+}
+
+/** Token atual, para envios que não passam por `request` (upload de vídeo). */
+export const tokenDaSessao = (): string | null => bridge?.get()?.token ?? null;
+
 async function executar(path: string, opcoes: Opcoes, token?: string) {
   if (!path.startsWith("/") || path.startsWith("//") || /[\\\r\n#]/.test(path)) {
     throw new ApiError("Caminho de API inválido.", 0);
   }
-  if (!urlHttpsSegura(API_URL) && !(typeof __DEV__ !== "undefined" && __DEV__ && API_URL.startsWith("http://"))) {
-    throw new ApiError("A conexão com a API exige HTTPS.", 0);
-  }
+  exigirConexaoSegura();
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opcoes.body !== undefined) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;

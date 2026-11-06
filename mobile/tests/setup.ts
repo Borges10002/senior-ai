@@ -26,3 +26,14 @@ jest.mock('@react-native-community/datetimepicker', () => ({
 jest.mock('@/infra/storage/preferencias-storage', () => ({
   carregarPreferenciaTema: async () => 'claro', salvarPreferenciaTema: jest.fn(),
 }));
+jest.mock('expo-camera', () => ({
+  CameraView: 'CameraView',
+  useCameraPermissions: () => [{ granted: true }, jest.fn(async () => ({ granted: true }))],
+  useMicrophonePermissions: () => [{ granted: true }, jest.fn(async () => ({ granted: true }))],
+}));
+jest.mock('expo-keep-awake', () => ({ useKeepAwake: jest.fn() }));
+jest.mock('@/infra/storage/gravacao-local', () => ({
+  guardarGravacao: jest.fn((_id: string, uri: string) => uri),
+  gravacaoPendente: jest.fn(() => null),
+  apagarGravacaoLocal: jest.fn(),
+}));

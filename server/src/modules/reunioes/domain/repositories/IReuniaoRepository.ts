@@ -15,4 +15,6 @@ export default interface IReuniaoRepository {
   save(reuniao: Reuniao): Promise<Reuniao>;
   delete(id: string): Promise<void>;
   countAll(): Promise<number>;
+  /** Reuniões agendadas ou em andamento que terminam depois de `apos`. */
+  periodosOcupados(codusuario: number, apos: Date): Promise<{ inicio: Date; fim: Date }[]>;
 }

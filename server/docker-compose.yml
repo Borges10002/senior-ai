@@ -55,7 +55,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "127.0.0.1:3333:3333"
+      - "${API_BIND:-127.0.0.1}:3333:3333"
+    volumes:
+      - gravacoes_data:/app/storage
     depends_on:
       database:
         condition: service_healthy
@@ -64,15 +66,16 @@ services:
     networks:
       - senior-network
 
-  # Ativado na Fase 3 (processamento de IA): docker compose --profile worker up -d
+  # Consome as filas: transcrição (ffmpeg + Whisper) e análise.
   worker:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: senior-ai-worker
-    profiles: ["worker"]
-    restart: on-failure
+    restart: unless-stopped
     command: ["node", "dist/shared/infra/queue/worker.js"]
+    volumes:
+      - gravacoes_data:/app/storage
     healthcheck:
       disable: true
     env_file:
@@ -91,6 +94,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  gravacoes_data:
 
 networks:
   senior-network:

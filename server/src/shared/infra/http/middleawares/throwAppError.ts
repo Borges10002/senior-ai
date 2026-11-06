@@ -2,6 +2,7 @@ import AppError from "@shared/errors/AppError";
 import "@/config/env";
 import { Request, Response, NextFunction } from "express";
 import mensagemConstants from "@/constants/mensagem.constants";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 
 
@@ -17,6 +18,11 @@ export default async function throwAppError(
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       message: err.message,
+    });
+  } else if (err instanceof MulterError) {
+    const grande = err.code === "LIMIT_FILE_SIZE";
+    return res.status(grande ? 413 : 400).json({
+      message: grande ? "O vídeo excede o tamanho máximo permitido." : "Envio de arquivo inválido.",
     });
   } else if (err instanceof ZodError) {
     // Dado inválido enviado pelo cliente: 400 com mensagem legível.

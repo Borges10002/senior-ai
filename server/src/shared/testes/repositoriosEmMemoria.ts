@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { periodosDasReunioes } from "@modules/reunioes/domain/reuniao";
 
 /**
  * Repositórios em memória para testes de casos de uso, sem banco.
@@ -87,6 +88,12 @@ export function reunioesEmMemoria() {
     },
     async countAll() {
       return dados.length;
+    },
+    async periodosOcupados(codusuario: number, apos: Date) {
+      return periodosDasReunioes(
+        dados.filter((r) => r.codusuario === codusuario && ["AGENDADA", "EM_ANDAMENTO"].includes(r.status)),
+        apos,
+      );
     },
   };
 }

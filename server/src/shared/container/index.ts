@@ -1,4 +1,25 @@
+import "@/config/env";
 import { container } from "tsyringe";
+
+import IAgendamentoRepository from "@modules/agenda/domain/repositories/IAgendamentoRepository";
+import { AgendamentoRepository } from "@modules/agenda/infra/typeorm/repositories/AgendamentoRepository";
+import type IAnalistaProvider from "@modules/anotacoes/domain/analise";
+import IAnotacaoRepository from "@modules/anotacoes/domain/repositories/IAnotacaoRepository";
+import { ClaudeAnalistaProvider } from "@modules/anotacoes/infra/anthropic/ClaudeAnalistaProvider";
+import { AnotacaoRepository } from "@modules/anotacoes/infra/typeorm/repositories/AnotacaoRepository";
+import type IFilaProcessamento from "@modules/gravacoes/domain/IFilaProcessamento";
+import IGravacaoRepository from "@modules/gravacoes/domain/repositories/IGravacaoRepository";
+import { GravacaoRepository } from "@modules/gravacoes/infra/typeorm/repositories/GravacaoRepository";
+import type IExtratorAudio from "@modules/transcricoes/domain/IExtratorAudio";
+import type ITranscricaoProvider from "@modules/transcricoes/domain/ITranscricaoProvider";
+import ISegmentoRepository from "@modules/transcricoes/domain/repositories/ISegmentoRepository";
+import { FfmpegExtratorAudio } from "@modules/transcricoes/infra/ffmpeg/FfmpegExtratorAudio";
+import { WhisperTranscricaoProvider } from "@modules/transcricoes/infra/openai/WhisperTranscricaoProvider";
+import { SegmentoRepository } from "@modules/transcricoes/infra/typeorm/repositories/SegmentoRepository";
+import { FilaProcessamento } from "@shared/infra/queue/FilaProcessamento";
+import type IStorageProvider from "@shared/providers/storage/IStorageProvider";
+import { LocalStorageProvider } from "@shared/providers/storage/LocalStorageProvider";
+import { S3StorageProvider } from "@shared/providers/storage/S3StorageProvider";
 
 import IAuditoriaRepository from "@modules/auditoria/domain/repositories/IAuditoriaRepository";
 import { AuditoriaRepository } from "@modules/auditoria/infra/typeorm/repositories/AuditoriaRepository";
@@ -28,6 +49,18 @@ import IVendaRepository from "@modules/assinaturas/domain/repositories/IVendaRep
 import { VendaRepository } from "@modules/assinaturas/infra/typeorm/repositories/VendaRepository";
 
 container.registerSingleton<IReuniaoRepository>("ReuniaoRepository", ReuniaoRepository);
+container.registerSingleton<IGravacaoRepository>("GravacaoRepository", GravacaoRepository);
+container.registerSingleton<ISegmentoRepository>("SegmentoRepository", SegmentoRepository);
+container.registerSingleton<IAnotacaoRepository>("AnotacaoRepository", AnotacaoRepository);
+container.registerSingleton<IAgendamentoRepository>("AgendamentoRepository", AgendamentoRepository);
+container.registerSingleton<IStorageProvider>(
+  "StorageProvider",
+  process.env.STORAGE_PROVIDER === "s3" ? S3StorageProvider : LocalStorageProvider,
+);
+container.registerSingleton<IFilaProcessamento>("FilaProcessamento", FilaProcessamento);
+container.registerSingleton<IExtratorAudio>("ExtratorAudio", FfmpegExtratorAudio);
+container.registerSingleton<ITranscricaoProvider>("TranscricaoProvider", WhisperTranscricaoProvider);
+container.registerSingleton<IAnalistaProvider>("AnalistaProvider", ClaudeAnalistaProvider);
 container.registerSingleton<IAuditoriaRepository>("AuditoriaRepository", AuditoriaRepository);
 
 container.registerSingleton<IAccountsRepository>(

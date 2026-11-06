@@ -1,10 +1,26 @@
 # Senior AI
 
-**Assistente executivo inteligente.** Grava e transcreve reuniões, gera atas com IA, extrai decisões e tarefas e administra a agenda do proprietário. Toda ação sensível pede autorização antes de ser executada.
+**Um assessor sênior no celular.** O app filma a reunião, transcreve o que foi dito, anota resumo, decisões, tarefas e pendências e agenda sozinho as próximas reuniões, sem ninguém precisar confirmar.
 
 Produto **DimiTech**. A base (estrutura, segurança, testes, assinatura e lançamento do app) é a mesma do projeto MyFinances.
 
 ---
+
+## Como funciona
+
+```text
+App (câmera) -> API (upload) -> armazenamento privado -> fila
+                                                          |
+Worker: ffmpeg extrai o áudio -> Whisper transcreve -> Claude anota -> agenda
+                                                          |
+App acompanha o andamento e mostra o resultado <----------+
+```
+
+- **Gravação:** o dono confirma que avisou os participantes (LGPD) e grava pelo celular.
+- **Transcrição:** OpenAI Whisper, com o horário de cada trecho. Essa API não identifica quem falou.
+- **Anotações:** Claude gera resumo, assuntos, decisões, tarefas e pendências, sempre com o horário do trecho de origem.
+- **Agenda automática:** o que foi combinado com data e hora vira reunião na agenda do dono, sem confirmação (substitui a RN009). Nada é enviado a terceiros, tudo fica na auditoria e o dono pode cancelar. Sugestões não viram agenda. Em conflito de horário nada é sobreposto: o app avisa e indica o próximo horário livre.
+- **Falhas:** o vídeo original nunca é apagado (RN013), a etapa tenta 3 vezes e a gravação pode ser reprocessada.
 
 ## Estrutura do repositório
 
@@ -43,11 +59,14 @@ server/src/
 | `admin`, `feedback` | Pronto |
 | `assinaturas` | Pronto: plano Pro, teste grátis, Asaas, webhook e painel de vendas |
 | `reunioes` | Pronto: criar, editar, excluir, iniciar, finalizar, cancelar |
-| `auditoria` | Pronto: registra a exclusão de reuniões; pronto para as autorizações da Fase 4 |
+| `gravacoes` | Pronto: upload privado de vídeo, acompanhamento, download pelo dono e reprocessamento |
+| `transcricoes` | Pronto: ffmpeg e Whisper no worker |
+| `anotacoes` | Pronto: análise com Claude e saída validada por schema |
+| `agenda` | Pronto: agendamento automático com conflitos; Google e Outlook na próxima etapa |
+| `auditoria` | Pronto: registra gravações, agendamentos automáticos e exclusões |
 | `notificacoes` | Base de avisos por e-mail, ainda sem aviso de tarefas |
-| Gravações, participantes, storage | Fase 2 |
-| Transcrições, atas, decisões, tarefas, IA, assistente | Fase 3 (filas e worker já existem) |
-| Agenda, aprovações, integrações | Fase 4 |
+| Participantes, gestão de tarefas, assistente por voz | Próximas fases |
+| Integrações com Google Calendar e Outlook | Próximas fases |
 
 ## Como rodar localmente
 
@@ -90,13 +109,13 @@ npm install
 npx expo start
 ```
 
-> A gravação em segundo plano (Fase 2) exigirá um *development build*. Ela não funciona no Expo Go.
+**Chaves de IA:** preencha `OPENAI_API_KEY` e `ANTHROPIC_API_KEY` em `server/.env` e rode `docker compose up -d` de novo. Sem elas a gravação termina como falha e pode ser reprocessada depois.
 
-**Worker de IA** (Fase 3, ainda sem processadores registrados):
+**Testar no celular:** a câmera só funciona em aparelho físico. Com o celular na mesma rede do computador:
 
-```bash
-docker compose --profile worker up -d
-```
+1. Em `server/.env`, use `API_BIND=0.0.0.0` (só em desenvolvimento) e rode `docker compose up -d`. A porta 3333 precisa estar livre no computador.
+2. Em `mobile/.env`, use `EXPO_PUBLIC_API_URL=http://<ip-do-computador>:3333`.
+3. Rode `npx expo start` e abra o app. Na tela Início, toque em **Gravar reunião agora**.
 
 ## Testes
 
@@ -112,7 +131,9 @@ docker compose --profile worker up -d
 
 - Nenhum segredo no app ou no web: chaves do Asaas, JWT e banco ficam só no servidor.
 - Regras de acesso (administrador, plano ativo, dados de cada usuário) são conferidas na API.
-- Reunião de outro usuário responde 404, sem revelar que o id existe.
+- Reunião e gravação de outro usuário respondem 404, sem revelar que o id existe.
+- Vídeos ficam em armazenamento privado e só saem pela API, depois de conferir o dono.
+- A fala transcrita é tratada como dado: quem fala na reunião não consegue dar ordens à IA.
 - No web, a sessão fica em cookies HttpOnly. No app, fica no `SecureStore`, com o backup do Android desligado.
 - A API recusa subir em produção com segredos fracos ou CORS sem HTTPS.
 - Postgres, Redis e API ficam ligados só a `127.0.0.1` no Docker. O Redis exige senha.
@@ -126,6 +147,8 @@ O deploy no Render, a compilação do APK no EAS e o lançamento automático fun
 - Bucket R2 `seniorai-app`.
 - Projeto EAS novo: rode `npx eas-cli@latest init` em `mobile/`.
 - Conta e token do Asaas.
+- Bucket privado para os vídeos (`STORAGE_PROVIDER=s3`), porque o volume local não atende mais de um servidor.
+- Chaves da OpenAI e da Anthropic.
 
 ---
 

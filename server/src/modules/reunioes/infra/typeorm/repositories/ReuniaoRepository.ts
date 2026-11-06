@@ -1,7 +1,8 @@
-import type { Repository } from "typeorm";
+import { In, Not, IsNull, type Repository } from "typeorm";
 import { TipecDataSource } from "@shared/infra/typeorm";
 import IReuniaoRepository from "@modules/reunioes/domain/repositories/IReuniaoRepository";
 import type { FiltroReunioes } from "@modules/reunioes/domain/repositories/IReuniaoRepository";
+import { periodosDasReunioes } from "@modules/reunioes/domain/reuniao";
 import { Reuniao } from "@modules/reunioes/infra/typeorm/entities/Reuniao";
 
 class ReuniaoRepository implements IReuniaoRepository {
@@ -35,6 +36,13 @@ class ReuniaoRepository implements IReuniaoRepository {
 
   async delete(id: string): Promise<void> {
     await this.repo.delete({ id });
+  }
+
+  async periodosOcupados(codusuario: number, apos: Date): Promise<{ inicio: Date; fim: Date }[]> {
+    const reunioes = await this.repo.find({
+      where: { codusuario, status: In(["AGENDADA", "EM_ANDAMENTO"]), inicio_previsto: Not(IsNull()) },
+    });
+    return periodosDasReunioes(reunioes, apos);
   }
 
   countAll(): Promise<number> {

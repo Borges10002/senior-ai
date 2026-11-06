@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { gravacoesRoutes } from "@modules/gravacoes/infra/http/routes/gravacoes.routes";
 import { reunioesRoutes } from "@modules/reunioes/infra/http/routes/reunioes.routes";
 import { usuarioRoutes } from "@modules/usuario/infra/http/routes/usuario.routes";
 import authenticateRoutes from "@modules/accounts/infra/http/routes/index.routes";
@@ -11,6 +12,7 @@ const routes = Router();
 routes.use(authenticateRoutes);
 routes.use(usuarioRoutes);
 routes.use(reunioesRoutes);
+routes.use(gravacoesRoutes);
 routes.use(feedbackRoutes);
 routes.use(adminRoutes);
 routes.use(assinaturasRoutes);
@@ -46,6 +48,18 @@ const swaggerRoutes = {
   },
   "/reunioes/{id}/cancelar": {
     post: { tags: ["Meetings"], summary: "Cancel meeting" },
+  },
+  "/reunioes/{id}/gravacoes": {
+    post: { tags: ["Recordings"], summary: "Upload the meeting video (multipart: video, consentimento)" },
+  },
+  "/reunioes/{id}/resultado": {
+    get: { tags: ["Recordings"], summary: "Recording status, transcript, notes and scheduling results" },
+  },
+  "/gravacoes/{id}/arquivo": {
+    get: { tags: ["Recordings"], summary: "Download the video (owner only)" },
+  },
+  "/gravacoes/{id}/reprocessar": {
+    post: { tags: ["Recordings"], summary: "Run the pipeline again after a failure" },
   },
   "/feedbacks": {
     post: { tags: ["Feedback"], summary: "Create user feedback" },

@@ -24,3 +24,19 @@ export function garantirTransicao(de: StatusReuniao, para: StatusReuniao): void 
 export function podeExcluir(status: StatusReuniao): boolean {
   return status === "AGENDADA" || status === "CANCELADA";
 }
+
+const UMA_HORA = 60 * 60 * 1000;
+
+/** Período ocupado por cada reunião; sem término previsto, conta uma hora. */
+export function periodosDasReunioes(
+  reunioes: { inicio_previsto: Date | null; fim_previsto: Date | null }[],
+  apos: Date,
+): { inicio: Date; fim: Date }[] {
+  return reunioes
+    .filter((r): r is { inicio_previsto: Date; fim_previsto: Date | null } => r.inicio_previsto !== null)
+    .map((r) => ({
+      inicio: new Date(r.inicio_previsto),
+      fim: new Date(r.fim_previsto ?? new Date(r.inicio_previsto).getTime() + UMA_HORA),
+    }))
+    .filter((p) => p.fim > apos);
+}

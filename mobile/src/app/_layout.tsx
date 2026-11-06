@@ -75,6 +75,11 @@ function Rotas({ usuario }: { usuario: boolean }) {
             name="reuniao"
             options={{ presentation: "modal", headerShown: true, title: "Nova reunião" }}
           />
+          <Stack.Screen name="gravar" options={{ gestureEnabled: false }} />
+          <Stack.Screen
+            name="resultado"
+            options={{ headerShown: true, title: "Reunião" }}
+          />
           <Stack.Screen
             name="assinatura"
             options={{ headerShown: true, title: "Meu plano" }}

@@ -1,35 +1,29 @@
 /**
- * Processo separado que consome as filas do BullMQ (transcrição, atas, extração de tarefas).
+ * Processo separado que consome as filas do BullMQ (transcrição e análise).
  * Roda como serviço `worker` no docker-compose: `npm run dev:worker` / `npm run start:worker`.
  */
+// O worker não aplica migrations (é papel da API): precisa vir antes do DataSource.
+import "@shared/infra/scripts/semSincronizar";
 import "reflect-metadata";
 import "@/config/env";
 import "@shared/container";
-import { Worker, type Processor } from "bullmq";
+import { Worker } from "bullmq";
 import { redisConnection } from "@config/redis.config";
 import { TipecDataSource } from "@shared/infra/typeorm";
 import type { NomeFila } from "./filas";
-
-/**
- * Cada módulo registra aqui o processador da sua fila, por exemplo:
- *   [FILAS.TRANSCRICAO]: transcreverGravacao,   // modules/transcricoes/infra/jobs
- * Fase 3 do roadmap.
- */
-const processadores: Partial<Record<NomeFila, Processor>> = {};
+import { processadores } from "./processadores";
 
 async function iniciar(): Promise<void> {
-  const entradas = Object.entries(processadores) as [NomeFila, Processor][];
-  if (!entradas.length) {
-    console.log("[Senior AI Worker] Nenhum processador registrado ainda. Encerrando.");
-    return;
-  }
-
-  // O worker não aplica migrations: isso é papel da API.
-  process.env.DB_MIGRATIONS_RUN = "false";
   await TipecDataSource.initialize();
 
-  const workers = entradas.map(([nome, processador]) => {
-    const worker = new Worker(nome, processador, { connection: redisConnection, concurrency: 2 });
+  const workers = (Object.keys(processadores) as NomeFila[]).map((nome) => {
+    const worker = new Worker(nome, processadores[nome], {
+      connection: redisConnection,
+      concurrency: 2,
+      // Vídeos longos levam tempo: o job não pode ser dado como travado no meio.
+      lockDuration: 5 * 60 * 1000,
+      maxStalledCount: 1,
+    });
     worker.on("failed", (job, erro) =>
       console.error(`[Senior AI Worker] Job ${job?.id} da fila ${nome} falhou:`, erro.message),
     );

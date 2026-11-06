@@ -1,7 +1,9 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from "typeorm";
+import { Check, Column, CreateDateColumn, Entity, Index, PrimaryColumn, UpdateDateColumn } from "typeorm";
 import type { StatusReuniao } from "@modules/reunioes/domain/reuniao";
 
 @Entity("DIMIREUNIAO")
+@Check("CK_REUNIAO_STATUS", `"status" IN ('AGENDADA', 'EM_ANDAMENTO', 'FINALIZADA', 'CANCELADA')`)
+@Check("CK_REUNIAO_PERIODO", `"fim_previsto" IS NULL OR "inicio_previsto" IS NULL OR "fim_previsto" > "inicio_previsto"`)
 @Index("IDX_REUNIAO_USUARIO_INICIO", ["codusuario", "inicio_previsto"])
 class Reuniao {
   @PrimaryColumn("uuid")

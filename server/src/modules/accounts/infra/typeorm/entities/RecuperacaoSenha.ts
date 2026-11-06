@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 
 /** Pedido de troca de senha: guarda só o hash do token enviado por e-mail. */
 @Entity("DIMIRECUPERACAOSENHA")
+@Index("IDX_DIMIRECUPERACAOSENHA_token", ["token_hash"])
 export class RecuperacaoSenha {
   @PrimaryGeneratedColumn("uuid")
   id: string;

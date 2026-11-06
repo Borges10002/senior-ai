@@ -9,10 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.borges.seniorai",
-      "infoPlist": {
-        "NSMicrophoneUsageDescription": "O Senior AI usa o microfone para gravar suas reuniões com autorização dos participantes."
-      }
+      "bundleIdentifier": "com.borges.seniorai"
     },
     "android": {
       "adaptiveIcon": {
@@ -51,7 +48,15 @@
       "expo-font",
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O Senior AI usa a câmera para gravar suas reuniões.",
+          "microphonePermission": "O Senior AI usa o microfone para gravar e transcrever suas reuniões.",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

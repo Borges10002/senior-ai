@@ -14,11 +14,13 @@ RUN npm ci --omit=dev
 
 # --- runtime: imagem final sem código-fonte, sem devDependencies e sem .env ---
 FROM node:22-alpine
+RUN apk add --no-cache ffmpeg
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./
+RUN mkdir -p /app/storage /app/tmp && chown -R node:node /app/storage /app/tmp
 USER node
 EXPOSE 3333
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
